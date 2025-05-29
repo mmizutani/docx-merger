@@ -204,7 +204,7 @@ namespace DocxMerger.Tests
             var content = "Content";
 
             // Act & Assert
-            Assert.ThrowsAny<Exception>(() => TestDocumentCreator.CreateTestDocument(null, title, content));
+            Assert.ThrowsAny<Exception>(() => TestDocumentCreator.CreateTestDocument(null!, title, content));
         }
 
         [Fact]

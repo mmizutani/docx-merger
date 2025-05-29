@@ -150,7 +150,7 @@ namespace DocxMerger.Tests
             var outputFile = Path.Combine(_testDirectory, "output.docx");
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => DocumentMerger.MergeDocuments(null, outputFile));
+            Assert.Throws<ArgumentException>(() => DocumentMerger.MergeDocuments(null!, outputFile));
         }
 
         [Fact]
@@ -172,7 +172,7 @@ namespace DocxMerger.Tests
             var inputFiles = new List<string> { file1 };
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => DocumentMerger.MergeDocuments(inputFiles.ToArray(), null));
+            Assert.Throws<ArgumentException>(() => DocumentMerger.MergeDocuments(inputFiles.ToArray(), null!));
         }
 
         [Fact]
