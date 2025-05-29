@@ -1,4 +1,5 @@
-using OpenXmlPowerTools;
+using Codeuctivity.OpenXmlPowerTools;
+using Codeuctivity.OpenXmlPowerTools.DocumentBuilder;
 using System.Collections.Generic;
 using System.IO;
 using System;
