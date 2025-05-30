@@ -33,7 +33,7 @@ A C# command-line application that merges multiple Word documents (DOCX files) u
 
 ## Requirements
 
-- .NET 6.0 or later
+- .NET 9.0 or later
 - Valid DOCX files (OpenXML format)
 
 ## Installation
