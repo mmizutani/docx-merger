@@ -154,9 +154,9 @@ namespace DocxMerger
                 }
 
                 // Create a temporary file to store the processed document
-                string tempFilePath = Path.GetTempFileName();
-                string tempDocxPath = Path.ChangeExtension(tempFilePath, ".docx");
-                File.Delete(tempFilePath); // Remove the temp file created by GetTempFileName
+                string tempDir = Path.GetTempPath();
+                string uniqueFileName = $"docx_merge_{Guid.NewGuid()}.docx";
+                string tempDocxPath = Path.Combine(tempDir, uniqueFileName);
 
                 // Copy the original file to temp location
                 File.Copy(filePath, tempDocxPath, true);
