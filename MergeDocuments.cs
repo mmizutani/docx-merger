@@ -9,9 +9,28 @@ using System.Linq;
 
 namespace DocxMerger
 {
+    /// <summary>
+    /// Result of compatibility mode processing operation
+    /// </summary>
+    public class CompatibilityProcessingResult
+    {
+        public string ProcessedFilePath { get; set; }
+        public bool Success { get; set; }
+        public string? ErrorMessage { get; set; }
+        public bool WasProcessed { get; set; } // Whether any processing was actually performed
+
+        public CompatibilityProcessingResult(string processedFilePath, bool success, string? errorMessage = null, bool wasProcessed = false)
+        {
+            ProcessedFilePath = processedFilePath;
+            Success = success;
+            ErrorMessage = errorMessage;
+            WasProcessed = wasProcessed;
+        }
+    }
+
     public static class DocumentMerger
     {
-        public static void MergeDocuments(string[] fileNames, string outputFilePath)
+        public static void MergeDocuments(string[] fileNames, string outputFilePath, bool failOnCompatibilityProcessingError = false)
         {
             if (fileNames == null || fileNames.Length == 0)
                 throw new ArgumentException("At least one input file must be specified.", nameof(fileNames));
@@ -27,29 +46,90 @@ namespace DocxMerger
             }
 
             var sources = new List<Source>();
+            var tempFilesToDelete = new List<string>();
 
-            foreach (string fileName in fileNames)
+            try
             {
-                // Process the document to remove compatibility mode if present
-                string processedFileName = ProcessCompatibilityMode(fileName);
+                foreach (string fileName in fileNames)
+                {
+                    try
+                    {
+                        // Process the document to remove compatibility mode if present
+                        var processingResult = ProcessCompatibilityMode(fileName);
 
-                // Create a Source from each document file
-                var source = new Source(new WmlDocument(processedFileName), true);
-                sources.Add(source);
+                        // Handle processing failures based on configuration
+                        if (!processingResult.Success && failOnCompatibilityProcessingError)
+                        {
+                            throw new InvalidOperationException(
+                                $"Failed to process compatibility mode for file '{fileName}': {processingResult.ErrorMessage}. " +
+                                "This may cause issues during document merging. Use failOnCompatibilityProcessingError=false to proceed with unprocessed files.");
+                        }
+
+                        // Track temporary files for cleanup (only if processing created a temp file)
+                        if (processingResult.ProcessedFilePath != fileName)
+                        {
+                            tempFilesToDelete.Add(processingResult.ProcessedFilePath);
+                        }
+
+                        // Create a Source from each document file
+                        var source = new Source(new WmlDocument(processingResult.ProcessedFilePath), true);
+                        sources.Add(source);
+                    }
+                    catch (Exception ex) when (!(ex is InvalidOperationException && ex.Message.Contains("Failed to process compatibility mode")))
+                    {
+                        // Handle other file-related errors (e.g., corrupted files, invalid formats)
+                        if (failOnCompatibilityProcessingError)
+                        {
+                            throw new InvalidOperationException(
+                                $"Failed to process file '{fileName}': {ex.Message}. " +
+                                "The file may be corrupted or in an unsupported format. " +
+                                "Use failOnCompatibilityProcessingError=false to skip problematic files.", ex);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Warning: Skipping file '{fileName}' due to error: {ex.Message}");
+                            continue;
+                        }
+                    }
+                }
+
+                // Check if we have any valid sources to merge
+                if (sources.Count == 0)
+                {
+                    throw new InvalidOperationException("No valid documents were found to merge. All input files were either corrupted, invalid, or could not be processed.");
+                }
+
+                // Use DocumentBuilder to merge all documents
+                DocumentBuilder.BuildDocument(sources, outputFilePath);
             }
-
-            // Use DocumentBuilder to merge all documents
-            DocumentBuilder.BuildDocument(sources, outputFilePath);
+            finally
+            {
+                // Clean up temporary files
+                foreach (var tempFile in tempFilesToDelete)
+                {
+                    try
+                    {
+                        if (File.Exists(tempFile))
+                        {
+                            File.Delete(tempFile);
+                            Console.WriteLine($"✓ Temporary file deleted: {Path.GetFileName(tempFile)}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Warning: Could not delete temporary file {Path.GetFileName(tempFile)}: {ex.Message}");
+                    }
+                }
+            }
         }
 
         /// <summary>
         /// Processes a DOCX file to remove compatibility mode settings if present.
-        /// Returns the path to the processed file (either the original if no changes needed,
-        /// or a temporary file with compatibility mode removed).
+        /// Returns detailed information about the processing result.
         /// </summary>
         /// <param name="filePath">Path to the DOCX file to process</param>
-        /// <returns>Path to the processed file</returns>
-        private static string ProcessCompatibilityMode(string filePath)
+        /// <returns>Processing result with file path, success status, and error details</returns>
+        private static CompatibilityProcessingResult ProcessCompatibilityMode(string filePath)
         {
             try
             {
@@ -70,7 +150,7 @@ namespace DocxMerger
                 if (!hasCompatibilityMode)
                 {
                     Console.WriteLine($"✓ No compatibility mode detected in: {Path.GetFileName(filePath)}");
-                    return filePath;
+                    return new CompatibilityProcessingResult(filePath, true);
                 }
 
                 // Create a temporary file to store the processed document
@@ -86,13 +166,15 @@ namespace DocxMerger
 
                 Console.WriteLine($"✓ Compatibility mode removed from: {Path.GetFileName(filePath)}");
 
-                return tempDocxPath;
+                return new CompatibilityProcessingResult(tempDocxPath, true, null, true);
             }
             catch (Exception ex)
             {
-                // If processing fails, log the error and return the original file
-                Console.WriteLine($"Warning: Could not process compatibility mode for {filePath}: {ex.Message}");
-                return filePath;
+                // If processing fails, log the error and return detailed failure information
+                string errorMessage = $"Could not process compatibility mode for {filePath}: {ex.Message}";
+                Console.WriteLine($"Warning: {errorMessage}");
+
+                return new CompatibilityProcessingResult(filePath, false, errorMessage);
             }
         }
 

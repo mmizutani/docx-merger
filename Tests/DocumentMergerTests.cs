@@ -258,5 +258,122 @@ namespace DocxMerger.Tests
             Assert.Contains("Test 2", text);
             Assert.DoesNotContain("Existing content", text);
         }
+
+        [Fact]
+        public void MergeDocuments_WithFailOnCompatibilityProcessingErrorFalse_ShouldProceedWithCorruptedFile()
+        {
+            // Arrange
+            var validFile = CreateTestFile("valid.docx", "Valid Document", "Valid content");
+            var invalidFile = CreateInvalidDocument("invalid.docx");
+            var outputFile = Path.Combine(_testDirectory, "output.docx");
+
+            string[] inputFiles = { validFile, invalidFile };
+
+            // Act & Assert - Should not throw exception
+            DocumentMerger.MergeDocuments(inputFiles, outputFile, failOnCompatibilityProcessingError: false);
+
+            // Verify output file was created
+            Assert.True(File.Exists(outputFile));
+        }
+
+        [Fact]
+        public void MergeDocuments_WithFailOnCompatibilityProcessingErrorTrue_ShouldThrowOnCorruptedFile()
+        {
+            // Arrange
+            var validFile = CreateTestFile("valid.docx", "Valid Document", "Valid content");
+            var invalidFile = CreateInvalidDocument("invalid.docx");
+            var outputFile = Path.Combine(_testDirectory, "output.docx");
+
+            string[] inputFiles = { validFile, invalidFile };
+
+            // Act & Assert - Should throw exception
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                DocumentMerger.MergeDocuments(inputFiles, outputFile, failOnCompatibilityProcessingError: true));
+
+            Assert.Contains("Failed to process compatibility mode", exception.Message);
+            Assert.Contains("invalid.docx", exception.Message);
+        }
+
+        [Fact]
+        public void MergeDocuments_WithMixedValidAndInvalidFiles_FailFastMode_ShouldStopOnFirstError()
+        {
+            // Arrange
+            var validFile1 = CreateTestFile("valid1.docx", "Valid Document 1", "Valid content 1");
+            var invalidFile = CreateInvalidDocument("invalid.docx");
+            var validFile2 = CreateTestFile("valid2.docx", "Valid Document 2", "Valid content 2");
+            var outputFile = Path.Combine(_testDirectory, "output.docx");
+
+            string[] inputFiles = { validFile1, invalidFile, validFile2 };
+
+            // Act & Assert
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                DocumentMerger.MergeDocuments(inputFiles, outputFile, failOnCompatibilityProcessingError: true));
+
+            Assert.Contains("Failed to process compatibility mode", exception.Message);
+
+            // Output file should not exist since processing failed
+            Assert.False(File.Exists(outputFile));
+        }
+
+        [Fact]
+        public void MergeDocuments_DefaultBehavior_ShouldBeBackwardCompatible()
+        {
+            // Arrange
+            var file1 = CreateTestFile("test1.docx", "Test 1", "Test content 1");
+            var file2 = CreateTestFile("test2.docx", "Test 2", "Test content 2");
+            var outputFile = Path.Combine(_testDirectory, "output.docx");
+
+            string[] inputFiles = { file1, file2 };
+
+            // Act - Using the original method signature (default parameter)
+            DocumentMerger.MergeDocuments(inputFiles, outputFile);
+
+            // Assert
+            Assert.True(File.Exists(outputFile));
+
+            // Verify content
+            using var doc = WordprocessingDocument.Open(outputFile, false);
+            var body = doc.MainDocumentPart?.Document?.Body;
+            Assert.NotNull(body);
+
+            var text = body.InnerText;
+            Assert.Contains("Test 1", text);
+            Assert.Contains("Test 2", text);
+        }
+
+        [Fact]
+        public void MergeDocuments_WithCompatibilityModeDocument_ShouldProcessSuccessfully()
+        {
+            // Arrange - Use the existing compatibility mode test document
+            var compatFile = Path.Combine("Tests", "fixtures", "compat_mode.docx");
+            var normalFile = CreateTestFile("normal.docx", "Normal Document", "Normal content");
+            var outputFile = Path.Combine(_testDirectory, "output.docx");
+
+            // Verify the compatibility mode file exists
+            if (!File.Exists(compatFile))
+            {
+                // Skip this test if the fixture doesn't exist
+                return;
+            }
+
+            string[] inputFiles = { compatFile, normalFile };
+
+            // Act - Should process compatibility mode successfully
+            DocumentMerger.MergeDocuments(inputFiles, outputFile, failOnCompatibilityProcessingError: true);
+
+            // Assert
+            Assert.True(File.Exists(outputFile));
+        }
+
+        private string CreateInvalidDocument(string fileName)
+        {
+            var filePath = Path.Combine(_testDirectory, fileName);
+
+            // Create a file that looks like a DOCX but is actually corrupted
+            File.WriteAllText(filePath, "This is not a valid DOCX file content");
+
+            _testFiles.Add(filePath);
+            return filePath;
+        }
     }
 }
