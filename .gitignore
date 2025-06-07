@@ -13,11 +13,16 @@ obj/
 .vscode/
 .vs/
 
-# Test files
-test*.docx
-merged*.docx
-output*.docx
-*_demo.docx
+# Test output files (generated during testing)
+/test*.docx
+/merged*.docx
+/output*.docx
+/complex_merged*.docx
+/*_demo.docx
+/*_compat_merged.docx
+
+# Allow test fixture files in Tests/fixtures/
+!/Tests/fixtures/*.docx
 
 # OS specific files
 .DS_Store

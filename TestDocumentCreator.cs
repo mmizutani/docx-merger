@@ -39,12 +39,16 @@ namespace DocxMerger.Tests
 
         public static void CreateTestDocuments()
         {
+            // Create test files in main directory for examples/demos
             CreateTestDocument("test1.docx", "Document 1", "This is the content of the first document. It contains some sample text for testing the merge functionality.");
             CreateTestDocument("test2.docx", "Document 2", "This is the content of the second document. It will be merged with the first document to create a combined output.");
 
             Console.WriteLine("Test documents created:");
             Console.WriteLine("- test1.docx");
             Console.WriteLine("- test2.docx");
+            Console.WriteLine();
+            Console.WriteLine("Note: These are temporary files for demo purposes.");
+            Console.WriteLine("Test fixtures are managed in Tests/fixtures/ directory.");
         }
     }
 }
