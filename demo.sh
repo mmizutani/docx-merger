@@ -26,7 +26,7 @@ echo
 
 # Merge documents
 echo "4. Merging test1.docx and test2.docx..."
-dotnet run --verbosity quiet -- test1.docx test2.docx merged_demo.docx
+dotnet run --verbosity quiet -- Tests/fixtures/test1.docx Tests/fixtures/test2.docx merged_demo.docx
 echo
 
 # Show final result
@@ -36,7 +36,7 @@ echo
 
 # Test error handling
 echo "6. Testing error handling with non-existent file..."
-dotnet run --verbosity quiet -- missing.docx test1.docx error_test.docx 2>/dev/null || echo "✓ Error handling works correctly"
+dotnet run --verbosity quiet -- missing.docx Tests/fixtures/test1.docx error_test.docx 2>/dev/null || echo "✓ Error handling works correctly"
 echo
 
 echo "Demo completed! You can open merged_demo.docx to see the result."

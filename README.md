@@ -23,7 +23,7 @@ A C# command-line application that merges multiple Word documents (DOCX files) u
 2. **Create test documents and try it out:**
    ```bash
    dotnet run -- --create-test
-   dotnet run -- test1.docx test2.docx merged.docx
+   dotnet run -- Tests/fixtures/test1.docx Tests/fixtures/test2.docx merged.docx
    ```
 
 3. **Or run the demo script:**
