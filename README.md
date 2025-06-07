@@ -33,7 +33,7 @@ A C# command-line application that merges multiple Word documents (DOCX files) u
 
 ## Requirements
 
-- .NET 6.0 or later
+- .NET 9.0 or later
 - Valid DOCX files (OpenXML format)
 
 ## Installation
@@ -103,7 +103,7 @@ The application handles common scenarios:
 ## Dependencies
 
 - **OpenXmlPowerTools**: Version 4.5.3.2 - Core document processing library
-- **.NET 6.0**: Target framework
+- **.NET 9.0**: Target framework
 
 ## Building for Distribution
 
