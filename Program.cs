@@ -95,10 +95,8 @@ namespace DocxMerger
             Console.WriteLine("  - All input files must exist and be valid .docx files");
             Console.WriteLine("  - Documents are merged in the order specified");
             Console.WriteLine("  - The first document's styles and formatting are preserved");
-        }
-
-        /// <summary>
-        /// Tests compatibility mode handling by creating a test document and processing it
+        }        /// <summary>
+        /// Tests compatibility mode handling by using existing test fixtures
         /// </summary>
         static void TestCompatibilityMode()
         {
@@ -107,18 +105,16 @@ namespace DocxMerger
             
             try
             {
-                // Create test files
-                string compatFile = "test_compat_mode.docx";
-                string normalFile = "test_normal.docx";
+                // Use existing fixture files
+                string compatFile = "Tests/fixtures/compat_mode.docx";
+                string normalFile = "Tests/fixtures/test1.docx";
                 string outputFile = "test_compat_merged.docx";
                 
-                Console.WriteLine("1. Creating compatibility mode test document...");
-                CompatibilityModeTestHelper.CreateCompatibilityModeDocument(compatFile);
+                Console.WriteLine("1. Testing with compatibility mode fixture...");
+                Console.WriteLine($"   Compatibility mode file: {compatFile}");
+                Console.WriteLine($"   Normal file: {normalFile}");
                 
-                Console.WriteLine("2. Creating normal test document...");
-                DocxMerger.Tests.TestDocumentCreator.CreateTestDocument(normalFile, "Normal Document", "This is a normal document without compatibility mode.");
-                
-                Console.WriteLine("3. Merging documents (compatibility mode processing will be applied)...");
+                Console.WriteLine("2. Merging documents (compatibility mode processing will be applied)...");
                 DocumentMerger.MergeDocuments(new[] { compatFile, normalFile }, outputFile);
                 
                 Console.WriteLine();
@@ -126,13 +122,7 @@ namespace DocxMerger
                 Console.WriteLine($"✓ Output saved to: {outputFile}");
                 Console.WriteLine();
                 Console.WriteLine("The compatibility mode document was automatically upgraded to modern format during the merge process.");
-                
-                // Clean up test files
-                Console.WriteLine();
-                Console.WriteLine("Cleaning up test files...");
-                if (File.Exists(compatFile)) File.Delete(compatFile);
-                if (File.Exists(normalFile)) File.Delete(normalFile);
-                Console.WriteLine("✓ Test files cleaned up.");
+                Console.WriteLine("You can check the output to see that both documents were merged successfully.");
             }
             catch (Exception ex)
             {

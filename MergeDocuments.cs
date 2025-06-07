@@ -32,7 +32,7 @@ namespace DocxMerger
             {
                 // Process the document to remove compatibility mode if present
                 string processedFileName = ProcessCompatibilityMode(fileName);
-                
+
                 // Create a Source from each document file
                 var source = new Source(new WmlDocument(processedFileName), true);
                 sources.Add(source);
@@ -54,7 +54,7 @@ namespace DocxMerger
             try
             {
                 bool hasCompatibilityMode = false;
-                
+
                 // Check if the document has compatibility mode settings
                 using (var doc = WordprocessingDocument.Open(filePath, false))
                 {
@@ -77,7 +77,7 @@ namespace DocxMerger
                 string tempFilePath = Path.GetTempFileName();
                 string tempDocxPath = Path.ChangeExtension(tempFilePath, ".docx");
                 File.Delete(tempFilePath); // Remove the temp file created by GetTempFileName
-                
+
                 // Copy the original file to temp location
                 File.Copy(filePath, tempDocxPath, true);
 
@@ -142,7 +142,7 @@ namespace DocxMerger
 
                 // Optionally add modern compatibility settings for the latest Word version
                 var newCompat = new Compatibility();
-                
+
                 // Add compatibility settings for Word 2019/365 (version 16)
                 newCompat.AppendChild(new CompatibilitySetting()
                 {
